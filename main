@@ -1,0 +1,160 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <iomanip>
+
+using namespace std;
+
+// Item struct to hold information about an item
+struct Item {
+    string name;
+    int quantity;
+    int price;
+};
+
+// Function to display inventory
+void displayInventory(const vector<Item>& inventory) {
+    cout << setw(20) << left << "Item" << setw(10) << "Price" << setw(10) << "Quantity" << endl;
+    cout << "----------------------------------------" << endl;
+    for (const auto& item : inventory) {
+        cout << setw(20) << left << item.name;
+        cout << setw(10) << item.price;
+        if (item.quantity == 0) {
+            cout << "SOLD OUT" << endl;
+        } else {
+            cout << setw(10) << item.quantity << endl;
+        }
+    }
+}
+
+// Function to buy from merchant
+void buyItem(vector<Item>& merchantInventory, vector<Item>& playerInventory, int& playerMoney) {
+    displayInventory(merchantInventory);
+    
+    cout << "\nEnter the item name to buy: ";
+    string itemName;
+    cin >> itemName;
+    
+    bool itemFound = false;
+    for (auto& item : merchantInventory) {
+        if (item.name == itemName) {
+            itemFound = true;
+            if (item.quantity == 0) {
+                cout << "This item is SOLD OUT!" << endl;
+                return;
+            }
+            if (playerMoney < item.price) {
+                cout << "You cannot afford this item!" << endl;
+                return;
+            }
+            
+            item.quantity--;
+            playerMoney -= item.price;
+            
+            bool playerHasItem = false;
+            for (auto& playerItem : playerInventory) {
+                if (playerItem.name == item.name) {
+                    playerItem.quantity++;
+                    playerHasItem = true;
+                    break;
+                }
+            }
+            if (!playerHasItem) {
+                playerInventory.push_back({item.name, 1, item.price});
+            }
+            cout << "You bought " << item.name << "!" << endl;
+            return;
+        }
+    }
+    if (!itemFound) {
+        cout << "Item not found in merchant's inventory!" << endl;
+    }
+}
+
+// Function to sell an item from player's inventory to merchant
+void sellItem(vector<Item>& merchantInventory, vector<Item>& playerInventory, int& playerMoney) {
+    displayInventory(playerInventory);
+    
+    cout << "\nEnter the item name to sell: ";
+    string itemName;
+    cin >> itemName;
+    
+    bool itemFound = false;
+    for (auto& playerItem : playerInventory) {
+        if (playerItem.name == itemName) {
+            itemFound = true;
+            playerItem.quantity--;
+            playerMoney += playerItem.price;
+            
+            bool merchantHasItem = false;
+            for (auto& merchantItem : merchantInventory) {
+                if (merchantItem.name == item.name) {
+                    merchantItem.quantity++;
+                    merchantHasItem = true;
+                    break;
+                }
+            }
+            if (!merchantHasItem) {
+                merchantInventory.push_back({playerItem.name, 1, playerItem.price});
+            }
+            
+            if (playerItem.quantity == 0) {
+                auto it = find_if(playerInventory.begin(), playerInventory.end(), [&itemName](const Item& item) {
+                    return item.name == itemName;
+                });
+                if (it != playerInventory.end()) {
+                    playerInventory.erase(it);
+                }
+            }
+            
+            cout << "You sold " << playerItem.name << "!" << endl;
+            return;
+        }
+    }
+    if (!itemFound) {
+        cout << "Item not found in your inventory!" << endl;
+    }
+}
+
+// Main function to handle the merchant system
+int main() {
+    vector<Item> merchantInventory = {
+        {"Sword", 2, 50},
+        {"Shield", 1, 75},
+        {"Potion", 5, 10}
+    };
+    
+    vector<Item> playerInventory;
+    int playerMoney = 100;
+    int choice;
+    
+    do {
+        cout << "\nWelcome to the Merchant! What would you like to do?" << endl;
+        cout << "1. Buy from merchant" << endl;
+        cout << "2. Sell to merchant" << endl;
+        cout << "3. View your inventory" << endl;
+        cout << "4. Exit" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+        
+        switch (choice) {
+            case 1:
+                buyItem(merchantInventory, playerInventory, playerMoney);
+                break;
+            case 2:
+                sellItem(merchantInventory, playerInventory, playerMoney);
+                break;
+            case 3:
+                displayInventory(playerInventory);
+                cout << "Your current money: " << playerMoney << endl;
+                break;
+            case 4:
+                cout << "Exiting merchant system." << endl;
+                break;
+            default:
+                cout << "Invalid choice, please try again!" << endl;
+        }
+    } while (choice != 4);
+    
+    return 0;
+}
